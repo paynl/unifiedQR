@@ -156,7 +156,7 @@ class UUID
 
     public static function validateAmount($amount)
     {
-        if ( ! is_int($amount) || $amount < 0 || $amount > 999999) {
+        if ( (!is_int($amount) && !ctype_digit($amount)) || $amount < 0 || $amount > 999999) {
             throw new Error('Invalid amount');
         }
     }
