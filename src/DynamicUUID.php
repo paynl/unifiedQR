@@ -39,12 +39,11 @@ class DynamicUUID
     private static function validateParameters(array &$parameters)
     {
         if ( ! isset($parameters['serviceId']) || ! isset($parameters['secret']) || ! isset($parameters['reference'])) {
-            throw new InvalidArgument("Invalid arguments; required: serviceId, secret, amount, reference");
+            throw new InvalidArgument("Invalid arguments; required: serviceId, secret, reference");
         }
 
         UUID::validateServiceId($parameters['serviceId']);
         UUID::validateSecret($parameters['secret']);
-        UUID::validateAmount($parameters['amount']);
 
         if ( ! isset($parameters['referenceType'])) {
             $parameters['referenceType'] = UUID::REFERENCE_TYPE_STRING;
