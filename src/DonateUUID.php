@@ -4,7 +4,7 @@
 namespace Paynl\QR;
 
 
-use Paynl\Error\Error;
+use Paynl\QR\Error\Error;
 use Paynl\QR\Error\InvalidArgument;
 
 class DonateUUID
@@ -107,6 +107,9 @@ class DonateUUID
     public static function validate($parameters)
     {
         $uuidData = preg_replace('/[^0-9a-f]/i', '', $parameters['uuid']);
+        if (substr($uuidData, 0, 1) != self::$prefix) {
+            return false;
+        }
 
         $amountLength = substr($uuidData, 1, 1);
         $amount       = substr($uuidData, 2, $amountLength);

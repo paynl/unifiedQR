@@ -5,6 +5,7 @@ namespace Paynl\QR;
 
 
 use Paynl\QR\Error\Error;
+use Paynl\QR\Error\InvalidArgument;
 
 class StaticUUID
 {

@@ -44,14 +44,14 @@ class TransactionUUID
     private static function validateEntranceCode($entranceCode)
     {
         if ( ! preg_match('/^[0-9a-z]{40}$/', $entranceCode)) {
-            throw new Error('Invalid entrance code');
+            throw new InvalidArgument('Invalid entrance code');
         }
     }
 
     private static function validateOrderId($orderId)
     {
         if ( ! preg_match('/^[0-9]{10}(X)[0-9a-z]{5}$/', $orderId)) {
-            throw new Error('Invalid orderID');
+            throw new InvalidArgument('Invalid orderID');
         }
     }
 

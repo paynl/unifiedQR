@@ -30,7 +30,7 @@ class UUID
      * @return string
      * @throws Error
      */
-    public static function encode(int $type, Array $parameters)
+    public static function encode(int $type, array $parameters)
     {
         switch ($type) {
             case self::QR_TYPE_DYNAMIC:
@@ -46,7 +46,7 @@ class UUID
                 return DonateUUID::encode($parameters);
                 break;
             default:
-                throw new Error("Invalid QR Type");
+                throw new InvalidArgument("Invalid QR Type");
         }
     }
 
@@ -56,10 +56,12 @@ class UUID
             throw new InvalidArgument("Invalid UUID");
         }
 
-        if ( ! isset($parrameters['type'])) {
+        if ( ! isset($parameters['type'])) {
             $type = self::getTypeFromUUID($parameters['uuid']);
-        } else {
+        } elseif (is_int($parameters['type']) || ctype_digit($parameters['type'])) {
             $type = $parameters['type'];
+        } else {
+            throw new InvalidArgument('Invalid Type');
         }
 
         switch ($type) {
@@ -95,7 +97,7 @@ class UUID
                 break;
             default:
                 if ( ! ctype_digit($firstChar)) {
-                    throw new Error('No valid type detected');
+                    throw new InvalidArgument('No valid type detected');
                 }
 
                 return self::QR_TYPE_STATIC;
@@ -147,23 +149,16 @@ class UUID
         }
     }
 
-    public static function validatePadChar($strPadChar)
-    {
-        if ( ! preg_match('/^[a-z0-9]{1}$/i', $strPadChar)) {
-            throw new Error('Invalid pad char');
-        }
-    }
-
     public static function validateAmount($amount)
     {
-        if ( ! is_int($amount) || $amount < 0 || $amount > 999999) {
+        if ( ! preg_match('/^[0-9]{1,6}$/i', $amount)) {
             throw new Error('Invalid amount');
         }
     }
 
     public static function validateBrandlock($brandlock)
     {
-        if ( ! preg_match('/^[0-9]{2}$/', $brandlock) && ! (int)$brandlock < 0 && ! (int)$brandlock > 99) {
+        if ( ! preg_match('/^[0-9]{2}$/', $brandlock)) {
             throw new Error('Invalid brandlock');
         }
     }
@@ -175,6 +170,10 @@ class UUID
      */
     public static function formatUUID($UUID)
     {
+        if (strlen($UUID) != 32) {
+            return false;
+        }
+
         return sprintf('%08s-%04s-%04s-%04s-%12s', substr($UUID, 0, 8), substr($UUID, 8, 4), substr($UUID, 12, 4),
             substr($UUID, 16, 4), substr($UUID, 20, 12));
     }
