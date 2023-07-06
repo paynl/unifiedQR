@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Paynl\QR;
 
 use Paynl\QR\Error\Error;
@@ -13,27 +12,34 @@ class TransactionUUID
     /**
      * Generate a UUID
      *
-     * @param Array $parameters
-     *
-     * @return string The UUID
+     * @param $parameters
+     * @return string
+     * @throws Error
+     * @throws InvalidArgument
      */
-    public static function encode($parameters)
+    public static function encode($parameters): string
     {
         self::validateParameters($parameters);
 
-        $orderId  = str_replace('x', self::$prefix, strtolower($parameters['orderId']));
+        $orderId = str_replace('x', 'a', strtolower($parameters['orderId']));
         $UUIDBase = substr($parameters['entranceCode'] . $orderId, -29);
 
-        $hash        = sha1($UUIDBase);
+        $hash = sha1($UUIDBase);
         $strCheckSum = substr($hash, 11, 2);
-        $UUID        = self::$prefix . $strCheckSum . $UUIDBase;
+        $UUID = self::$prefix . $strCheckSum . $UUIDBase;
 
         return UUID::formatUUID($UUID);
     }
 
+    /**
+     * @param array $parameters
+     * @return void
+     * @throws Error
+     * @throws InvalidArgument
+     */
     private static function validateParameters(array &$parameters)
     {
-        if ( ! isset($parameters['orderId']) || ! isset($parameters['entranceCode'])) {
+        if (!isset($parameters['orderId']) || !isset($parameters['entranceCode'])) {
             throw new InvalidArgument("Invalid arguments; required: orderId, entranceCode");
         }
 
@@ -41,16 +47,26 @@ class TransactionUUID
         self::validateEntranceCode($parameters['entranceCode']);
     }
 
-    private static function validateEntranceCode($entranceCode)
+    /**
+     * @param string $entranceCode
+     * @return void
+     * @throws Error
+     */
+    private static function validateEntranceCode(string $entranceCode)
     {
-        if ( ! preg_match('/^[0-9a-z]{40}$/', $entranceCode)) {
+        if (!preg_match('/^[0-9a-z]{40}$/', $entranceCode)) {
             throw new Error('Invalid entrance code');
         }
     }
 
-    private static function validateOrderId($orderId)
+    /**
+     * @param string $orderId
+     * @return void
+     * @throws Error
+     */
+    private static function validateOrderId(string $orderId)
     {
-        if ( ! preg_match('/^[0-9]{10}(X)[0-9a-z]{5}$/', $orderId)) {
+        if (!preg_match('/^[0-9]{10}(X)[0-9a-z]{5}$/', $orderId)) {
             throw new Error('Invalid orderID');
         }
     }
@@ -58,20 +74,18 @@ class TransactionUUID
     /**
      * Decode a UUID
      *
-     * @param Array $parameters
-     *
-     * @return array Array with string orderId
+     * @param array $parameters
+     * @return array
      * @throws Error
      */
-    public static function decode($parameters)
+    public static function decode(array $parameters): array
     {
-        $isValid = self::validate($parameters);
-        if ( ! $isValid) {
+        if (!self::validate($parameters)) {
             throw new Error('Incorrect signature');
         }
 
         $uuidData = preg_replace('/[^0-9a-z]/i', '', $parameters['uuid']);
-        $orderId  = preg_replace('/a/', 'X', substr($uuidData, -16), 1);
+        $orderId = preg_replace('/a/', 'X', substr($uuidData, -16), 1);
 
         self::validateOrderId($orderId);
 
@@ -87,19 +101,18 @@ class TransactionUUID
      *
      * @return bool
      */
-    public static function validate(array $parameters)
+    public static function validate(array $parameters): bool
     {
-        if (substr($parameters['uuid'], 0, 1) != 'a') {
+        if (substr($parameters['uuid'], 0, 1) !== self::$prefix) {
             return false;
         }
 
-        $uuid     = preg_replace('/[^0-9a-z]/i', '', $parameters['uuid']);
+        $uuid = preg_replace('/[^0-9a-z]/i', '', $parameters['uuid']);
         $uuidData = substr($uuid, 3);
 
-
-        $hash     = sha1($uuidData);
+        $hash = sha1($uuidData);
         $checksum = self::$prefix . substr($hash, 11, 2);
 
-        return $checksum == substr($uuid, 0, strlen($checksum));
+        return $checksum === substr($uuid, 0, strlen($checksum));
     }
 }

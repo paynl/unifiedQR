@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jorn
- * Date: 6-2-19
- * Time: 15:37
- */
 
 namespace Paynl\QR;
 
@@ -35,16 +29,12 @@ class UUID
         switch ($type) {
             case self::QR_TYPE_DYNAMIC:
                 return DynamicUUID::encode($parameters);
-                break;
             case self::QR_TYPE_STATIC:
                 return StaticUUID::encode($parameters);
-                break;
             case self::QR_TYPE_TRANSACTION:
                 return TransactionUUID::encode($parameters);
-                break;
             case self::QR_TYPE_DONATE:
                 return DonateUUID::encode($parameters);
-                break;
             default:
                 throw new Error("Invalid QR Type");
         }
@@ -65,16 +55,12 @@ class UUID
         switch ($type) {
             case self::QR_TYPE_DYNAMIC:
                 return DynamicUUID::decode($parameters);
-                break;
             case self::QR_TYPE_STATIC:
                 return StaticUUID::decode($parameters);
-                break;
             case self::QR_TYPE_TRANSACTION:
                 return TransactionUUID::decode($parameters);
-                break;
             case self::QR_TYPE_DONATE:
                 return DonateUUID::decode($parameters);
-                break;
             default:
                 throw new InvalidArgument('Invalid Type');
         }
@@ -86,13 +72,10 @@ class UUID
         switch ($firstChar) {
             case 'a':
                 return self::QR_TYPE_TRANSACTION;
-                break;
             case 'b':
                 return self::QR_TYPE_DYNAMIC;
-                break;
             case 'd':
                 return self::QR_TYPE_DONATE;
-                break;
             default:
                 if ( ! ctype_digit($firstChar)) {
                     throw new Error('No valid type detected');
@@ -108,7 +91,7 @@ class UUID
         for ($i = 0; $i < strlen($ascii); $i++) {
             $byte = strtoupper(dechex(ord($ascii[$i])));
             $byte = str_repeat('0', 2 - strlen($byte)) . $byte;
-            $hex  .= $byte . "";
+            $hex  .= $byte;
         }
 
         return $hex;

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jorn
- * Date: 6-2-19
- * Time: 16:59
- */
 
 use \Paynl\QR\UUID;
 

@@ -1,10 +1,8 @@
 <?php
 
-
 namespace Paynl\QR;
 
-
-use Paynl\Error\Error;
+use Paynl\QR\Error\Error;
 use Paynl\QR\Error\InvalidArgument;
 
 class DonateUUID
@@ -16,22 +14,23 @@ class DonateUUID
      * Generate a UUID
      *
      * @param array $parameters
-     *
-     * @return string The UUID
+     * @return string
+     * @throws Error
+     * @throws InvalidArgument
      */
-    public static function encode(array $parameters)
+    public static function encode(array $parameters): string
     {
 
         self::validateParameters($parameters);
 
-        if ($parameters['referenceType'] == UUID::REFERENCE_TYPE_STRING) {
+        if ($parameters['referenceType'] === UUID::REFERENCE_TYPE_STRING) {
             $parameters['reference'] = UUID::asciiToHex($parameters['reference']);
         }
 
-        $amount       = round($parameters['amount']);
+        $amount = round($parameters['amount']);
         $amountLength = strlen($amount);
-        $serviceId    = preg_replace('/\D/', '', $parameters['serviceId']);
-        $reference    = str_pad(strtolower($parameters['reference']), 16, self::$padChar, STR_PAD_LEFT);
+        $serviceId = preg_replace('/\D/', '', $parameters['serviceId']);
+        $reference = str_pad(strtolower($parameters['reference']), 16, self::$padChar, STR_PAD_LEFT);
 
         $UUIDData = self::$prefix . $amountLength . $amount . $serviceId;
 
@@ -43,9 +42,15 @@ class DonateUUID
         return UUID::formatUUID($UUID);
     }
 
+    /**
+     * @param array $parameters
+     * @return void
+     * @throws Error
+     * @throws InvalidArgument
+     */
     private static function validateParameters(array &$parameters)
     {
-        if ( ! isset($parameters['serviceId']) || ! isset($parameters['secret']) || ! isset($parameters['amount']) || ! isset($parameters['reference'])) {
+        if (!isset($parameters['serviceId']) || !isset($parameters['secret']) || !isset($parameters['amount']) || !isset($parameters['reference'])) {
             throw new InvalidArgument("Invalid arguments; required: serviceId, secret, amount, reference");
         }
 
@@ -53,11 +58,11 @@ class DonateUUID
         UUID::validateSecret($parameters['secret']);
         UUID::validateAmount($parameters['amount']);
 
-        if ( ! isset($parameters['referenceType'])) {
+        if (!isset($parameters['referenceType'])) {
             $parameters['referenceType'] = UUID::REFERENCE_TYPE_STRING;
         }
 
-        if ($parameters['referenceType'] == UUID::REFERENCE_TYPE_STRING) {
+        if ($parameters['referenceType'] === UUID::REFERENCE_TYPE_STRING) {
             UUID::validateReferenceString($parameters['reference']);
         } else {
             UUID::validateReferenceHex($parameters['reference']);
@@ -72,18 +77,18 @@ class DonateUUID
      * @return array Array with serviceId, reference and amount
      * @throws Error
      */
-    public static function decode(array $parameters)
+    public static function decode(array $parameters): array
     {
         UUID::validateSecret($parameters['secret']);
-        $isValid = self::validate($parameters);
-        if ( ! $isValid) {
+
+        if (!self::validate($parameters)) {
             throw new Error('Incorrect signature');
         }
 
         $uuidData = preg_replace('/[^0-9a-z]/i', '', $parameters['uuid']);
 
         $amountLength = substr($uuidData, 1, 1);
-        $amount       = substr($uuidData, 2, $amountLength);
+        $amount = substr($uuidData, 2, $amountLength);
 
         $serviceId = substr($uuidData, 8, 8);
         $serviceId = "SL-" . substr($serviceId, 0, 4) . '-' . substr($serviceId, 4, 4);
@@ -91,7 +96,7 @@ class DonateUUID
         $reference = substr($uuidData, 16);
 
         return array(
-            'amount'    => $amount,
+            'amount' => $amount,
             'serviceId' => $serviceId,
             'reference' => $reference
         );
@@ -104,18 +109,17 @@ class DonateUUID
      *
      * @return bool
      */
-    public static function validate($parameters)
+    public static function validate($parameters): bool
     {
         $uuidData = preg_replace('/[^0-9a-f]/i', '', $parameters['uuid']);
 
         $amountLength = substr($uuidData, 1, 1);
-        $amount       = substr($uuidData, 2, $amountLength);
-        $serviceId    = substr($uuidData, 8, 8);
+        $amount = substr($uuidData, 2, $amountLength);
+        $serviceId = substr($uuidData, 8, 8);
 
         $strChecksumUUID = substr($uuidData, ($amountLength + 2), (6 - $amountLength));
-        $hash            = hash_hmac(UUID::HASH_METHOD, self::$prefix . $amountLength . $amount . $serviceId,
-            $parameters['secret']);
+        $hash = hash_hmac(UUID::HASH_METHOD, self::$prefix . $amountLength . $amount . $serviceId, $parameters['secret']);
 
-        return substr($hash, 0, strlen($strChecksumUUID)) == $strChecksumUUID;
+        return substr($hash, 0, strlen($strChecksumUUID)) === $strChecksumUUID;
     }
 }
